@@ -64,6 +64,31 @@ public class Logic implements IGameHandler {
 
     }
     return nextLvlGameStates;
-  }
 
-}
+    public GaemState minMax(int depth, boolean Maximise, int alpha, int beta, GameState gameState) {
+      if(depth == 0) {
+        return Evalutae.rateGameState(gameState, getCurrentTeam)
+      }
+      // max player turn (friendly team)
+      if(Maximise) {
+        float maxValue = Float.MinValue;
+        for(GameState possibleGameStates: GameState.possibleMoves()) {
+          float rating = minMax(depth-1, false, alpha, beta, possibleGameStates)
+          if(rating > MaxValue) {
+            MaxValue = rating;
+          } 
+        }
+        return maxValue;
+        // min players turn 
+      } else{
+        float minValue = float.maxValue;
+        for(GameState gaemState: GameState.possibleMoves()) {
+          float rating = Evalute.rateGameState(gameState, getCurrentTeam);
+          if(rating < minValue) {
+            minValue = rating;
+          }
+
+        }
+      }
+    }
+  }
