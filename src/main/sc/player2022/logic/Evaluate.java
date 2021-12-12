@@ -14,18 +14,26 @@ public  class Evaluate {
         eval++;
         float rating = 0.0f;
         rating += (gameState.getPointsForTeam(team) *5 - gameState.getPointsForTeam(gameState.getOtherTeam()) *5);
-        rating += getPointsForPieces(gameState);
+        rating += getPointsForPieces(gameState, team);
+
         return rating;
     }
 
-    private static float getPointsForPieces(GameState gameState) {
+    private static float getPointsForPieces(GameState gameState, ITeam team) {
         float rating = 0.0f;
         Map<Coordinates, Piece> teamPieces = gameState.getCurrentPieces();
         for(Coordinates cords: teamPieces.keySet()) {
+//            System.out.println(cords.getX());
+            if(gameState.getStartTeam() == team) {
+                rating += cords.getX()*0.5;
+//                System.out.println("r team 1 added r is " + cords.getX()*0.5);
+            } else {
+                rating += (cords.getX()-7)*(-1)*0.5;
+//                System.out.print("r team 2 added r is ");
+//                System.out.println( (cords.getX()-7)*(-1)*0.2);
 
-            if(cords.getX() >1 && cords.getX() < 3)  {
-                rating += 8f;
             }
+
             Piece piece = teamPieces.get(cords);
             if(piece.getTeam() != gameState.getCurrentTeam()) {
                 continue;
@@ -49,7 +57,6 @@ public  class Evaluate {
                 rating += 4.0f;
             }
         }
-        System.out.println(rating);
         return rating;
     }
 }

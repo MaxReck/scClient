@@ -59,7 +59,7 @@ public class Logic implements IGameHandler {
             temp.performMove(move); // perform move to create a different game state
             nextLvlGameStates.add(temp);
         }
-        System.out.println("first move is " + nextLvlGameStates.get(0).getLastMove());
+//        System.out.println("first move is " + nextLvlGameStates.get(0).getLastMove());
         return nextLvlGameStates;
     }
 
