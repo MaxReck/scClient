@@ -24,13 +24,15 @@ public class Logic implements IGameHandler {
         log.info("Das Spiel ist beendet, Ergebnis: {}", data);
     }
 
+
     @Override
     public Move calculateMove() {
         long startTime = System.currentTimeMillis();
         log.info("Es wurde ein Zug von {} angefordert.", gameState.getCurrentTeam());
-        PosMove posMove= minMax(5,true,Float.MIN_VALUE, Float.MAX_VALUE, gameState);
+        PosMove posMove= miniMax(2, Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState);
         Move move = posMove.getGameState().getLastMove();
-        log.info("Sende {} nach {}ms.", move, System.currentTimeMillis() - startTime);
+        log.info("Sende {} nach {}ms. evals are {} rating is " + posMove.getRating(), move, System.currentTimeMillis() - startTime, Evaluate.eval);
+//        System.out.println(Evaluate.eval);
         return move;
     }
 
@@ -57,42 +59,45 @@ public class Logic implements IGameHandler {
             temp.performMove(move); // perform move to create a different game state
             nextLvlGameStates.add(temp);
         }
+        System.out.println("first move is " + nextLvlGameStates.get(0).getLastMove());
         return nextLvlGameStates;
     }
 
 
-    public PosMove minMax(int depth, boolean Maximise, float alpha, float beta, GameState gameState) {
-        if (depth == 0) {
-            return new PosMove(gameState, Evaluate.rateGameState(gameState, gameState.getStartTeam()));
+    public PosMove miniMax( int depth, float alpha, float beta, boolean Maximum, GameState gameState)  {
+        if(depth <= 0) {
+            return new PosMove(gameState, Evaluate.rateGameState(gameState, gameState.getCurrentTeam()));
         }
-        // max player turn (friendly team)
-        if (Maximise) {
-            PosMove maxValue = new PosMove(null, Float.MIN_VALUE);
-            for (GameState possibleGameState : getGameStates(gameState)) {
-                PosMove posMove = new PosMove(gameState, minMax(depth - 1, false, alpha, beta, possibleGameState).getRating());
-                if (posMove.getRating() > maxValue.getRating()) {
-                    maxValue.setRating(posMove.getRating());
+        if(Maximum) {
+            PosMove maxMove = new PosMove(null, Float.MIN_VALUE);
+            for(GameState move: getGameStates(gameState)) {
+                PosMove posMove = miniMax(depth-1, alpha, beta, false, move);
+                if(posMove.getRating() > maxMove.getRating()) {
+                    maxMove.setRating(posMove.getRating());
+                    maxMove.setGameState(move);
+//                    log.info("new best max move rating: {} move: {} depth is " + depth, maxMove.getRating(), maxMove.getGameState().getLastMove());
                 }
-                alpha = Math.max(posMove.getRating(), alpha);
-                if (beta <= alpha) {
+                alpha = Math.max(alpha, posMove.getRating());
+                if(beta <= alpha) {
                     break;
                 }
             }
-            return maxValue;
+            return maxMove;
         } else {
-            // min players turn
-            PosMove minValue = new PosMove(null, Float.MAX_VALUE);
-            for (GameState possibleGameState : getGameStates(gameState)) {
-                PosMove posMove = new PosMove(gameState, minMax(depth - 1, false, alpha, beta, possibleGameState).getRating());
-                if (posMove.getRating() < minValue.getRating()) {
-                    minValue.setRating(posMove.getRating());
+            PosMove minMove = new PosMove(null, Float.MAX_VALUE);
+            for(GameState move : getGameStates(gameState)) {
+                PosMove posMove = miniMax(depth-1, alpha, beta, true, move);
+                if(minMove.getRating() > posMove.getRating()) {
+                    minMove.setRating(posMove.getRating());
+                    minMove.setGameState(posMove.getGameState());
+//                    log.info("new best min move rating: {} move: {} depth is " + depth, minMove.getRating(), minMove.getGameState().getLastMove());
                 }
-                beta = Math.max(posMove.getRating(), beta);
-                if (beta <= alpha) {
+                beta = Math.min(beta, posMove.getRating());
+                if(beta <= alpha) {
                     break;
                 }
             }
-            return minValue;
+            return minMove;
         }
     }
 }

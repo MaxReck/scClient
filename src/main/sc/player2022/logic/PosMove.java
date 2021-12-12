@@ -22,4 +22,8 @@ public class PosMove {
     public void setRating(Float rating) {
         this.rating = rating;
     }
+
+    public void setGameState(GameState gameState) {
+        this.gameState = gameState;
+    }
 }
