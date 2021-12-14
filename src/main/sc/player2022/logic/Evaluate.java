@@ -6,36 +6,42 @@ import sc.plugin2022.GameState;
 import sc.plugin2022.Piece;
 import sc.plugin2022.PieceType;
 
-import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public  class Evaluate {
     public static long eval;
-    public static float rateGameState(GameState gameState, ITeam team) {
+    private static ITeam playerTeam;
+
+    public static void setPlayerTeam(ITeam playerTeam) {
+        Evaluate.playerTeam = playerTeam;
+    }
+
+    public static float rateGameState(GameState gameState) {
         eval++;
         float rating = 0.0f;
-        rating += (gameState.getPointsForTeam(team) *5 - gameState.getPointsForTeam(gameState.getOtherTeam()) *5);
-        rating += getPointsForPieces(gameState, team);
+        rating += (gameState.getPointsForTeam(playerTeam) *20 - gameState.getPointsForTeam(playerTeam.opponent()) *20);
+        rating += getPointsForPieces(gameState);
 
         return rating;
     }
 
-    private static float getPointsForPieces(GameState gameState, ITeam team) {
+    private static float getPointsForPieces(GameState gameState) {
         float rating = 0.0f;
-        Map<Coordinates, Piece> teamPieces = gameState.getCurrentPieces();
-        for(Coordinates cords: teamPieces.keySet()) {
-//            System.out.println(cords.getX());
-            if(gameState.getStartTeam() == team) {
-                rating += cords.getX()*0.5;
-//                System.out.println("r team 1 added r is " + cords.getX()*0.5);
-            } else {
-                rating += (cords.getX()-7)*(-1)*0.5;
-//                System.out.print("r team 2 added r is ");
-//                System.out.println( (cords.getX()-7)*(-1)*0.2);
+        Set<Coordinates> keySet = gameState.getBoard().getKeys();
+        for(Coordinates cords: keySet) {
 
+            if(Objects.requireNonNull(gameState.getBoard().get(cords)).getTeam() == playerTeam) {
+
+                if(gameState.getStartTeam() == playerTeam) {
+                    rating += cords.getX()*0.5;
+                } else {
+                    rating += (cords.getX()-7)*(-1)*0.5;
+                }
             }
-
-            Piece piece = teamPieces.get(cords);
-            if(piece.getTeam() != gameState.getCurrentTeam()) {
+            Piece piece = gameState.getBoard().get(cords);
+            assert piece != null;
+            if(piece.getTeam() != playerTeam) {
                 continue;
             }
             if(piece.getType() == PieceType.Herzmuschel) {
@@ -54,7 +60,10 @@ public  class Evaluate {
                 rating += 6.0f;
             }
             if(piece.getCount() >1) {
-                rating += 4.0f;
+                rating += piece.getCount()*4.0f;
+            }
+            if(piece.isAmber()) {
+                rating += 10;
             }
         }
         return rating;

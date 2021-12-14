@@ -24,12 +24,24 @@ public class Logic implements IGameHandler {
         log.info("Das Spiel ist beendet, Ergebnis: {}", data);
     }
 
-
     @Override
     public Move calculateMove() {
         long startTime = System.currentTimeMillis();
         log.info("Es wurde ein Zug von {} angefordert.", gameState.getCurrentTeam());
-        PosMove posMove= miniMax(2, Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState);
+        Evaluate.setPlayerTeam(this.gameState.getCurrentTeam());
+        int depth = 1;
+        PosMove posMove;
+//        do {
+//            posMove= miniMax(depth, Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState);
+//            System.out.println("depth= " +  depth);
+//            System.out.println("eval= " + Evaluate.eval);
+//            System.out.println("time= " + (System.currentTimeMillis() - startTime));
+//            depth++;
+//            Evaluate.eval = 0;
+//
+//        } while( System.currentTimeMillis() - startTime <600);
+        posMove= miniMax(4, Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState);
+
         Move move = posMove.getGameState().getLastMove();
         log.info("Sende {} nach {}ms. evals are {} rating is " + posMove.getRating(), move, System.currentTimeMillis() - startTime, Evaluate.eval);
 //        System.out.println(Evaluate.eval);
@@ -50,7 +62,8 @@ public class Logic implements IGameHandler {
     //get all game states for current game state
     public List<GameState> getGameStates(GameState gameState) {
         if (gameState == null) {
-            return null;
+            System.out.println("whyyyyy");
+            throw(new NullPointerException("Null"));
         }
         GameState temp;
         List<GameState> nextLvlGameStates = new ArrayList<>();
@@ -66,7 +79,7 @@ public class Logic implements IGameHandler {
 
     public PosMove miniMax( int depth, float alpha, float beta, boolean Maximum, GameState gameState)  {
         if(depth <= 0) {
-            return new PosMove(gameState, Evaluate.rateGameState(gameState, gameState.getCurrentTeam()));
+            return new PosMove(gameState, Evaluate.rateGameState(gameState));
         }
         if(Maximum) {
             PosMove maxMove = new PosMove(null, Float.MIN_VALUE);
