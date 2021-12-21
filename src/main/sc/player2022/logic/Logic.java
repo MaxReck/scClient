@@ -56,6 +56,10 @@ public class Logic implements IGameHandler {
         //posMove.set(miniMax(10, Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState));
 
         log.info(depth + " Tiefe");
+        // Fix für den Null Fehler
+        if (posMove.get() == null) {
+            posMove.set(new PosMove(this.gameState, Float.MIN_VALUE));
+        }
         Move move = posMove.get().getGameState().getLastMove();
         log.info("Sende {} nach {}ms. evals are {} rating is " + posMove.get().getRating(), move, System.currentTimeMillis() - startTime, Evaluate.eval);
 //        System.out.println(Evaluate.eval);
@@ -90,6 +94,7 @@ public class Logic implements IGameHandler {
 //        System.out.println("first move is " + nextLvlGameStates.get(0).getLastMove());
         return nextLvlGameStates;
     }
+
 
 
     public PosMove miniMax( int depth, float alpha, float beta, boolean Maximum, GameState gameState)  {
