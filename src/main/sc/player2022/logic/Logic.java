@@ -56,9 +56,10 @@ public class Logic implements IGameHandler {
         //posMove.set(miniMax(10, Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState));
 
         log.info(depth + " Tiefe");
-        // Fix für den Null Fehler
-        if (posMove.get() == null) {
-            posMove.set(new PosMove(this.gameState, Float.MIN_VALUE));
+        // Fix für den Null Fehler sehr schlecht
+        if (posMove.get().getGameState() == null) {
+            GameState emergencyGameState = getGameStates(this.gameState).get(0);
+            posMove.get().setGameState(emergencyGameState);
         }
         Move move = posMove.get().getGameState().getLastMove();
         log.info("Sende {} nach {}ms. evals are {} rating is " + posMove.get().getRating(), move, System.currentTimeMillis() - startTime, Evaluate.eval);
@@ -80,10 +81,6 @@ public class Logic implements IGameHandler {
 
     //get all game states for current game state
     public List<GameState> getGameStates(GameState gameState) {
-        if (gameState == null) {
-            System.out.println("whyyyyy");
-            throw(new NullPointerException("Null"));
-        }
         GameState temp;
         List<GameState> nextLvlGameStates = new ArrayList<>();
         for (Move move : gameState.getPossibleMoves()) {
