@@ -10,6 +10,8 @@ import sc.shared.GameResult;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class Logic implements IGameHandler {
@@ -24,13 +26,24 @@ public class Logic implements IGameHandler {
         log.info("Das Spiel ist beendet, Ergebnis: {}", data);
     }
 
+
     @Override
     public Move calculateMove() {
         long startTime = System.currentTimeMillis();
         log.info("Es wurde ein Zug von {} angefordert.", gameState.getCurrentTeam());
         Evaluate.setPlayerTeam(this.gameState.getCurrentTeam());
-        int depth = 1;
-        PosMove posMove;
+        AtomicInteger depth = new AtomicInteger(1);
+        AtomicReference<PosMove> posMove = new AtomicReference<>();
+        Thread bababui = new Thread(() -> {
+            while (true) {
+                posMove.set(miniMax(depth.get(), Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState));
+                depth.getAndIncrement();
+            }
+        });
+        bababui.start();
+        while (System.currentTimeMillis() - startTime < 1900) {
+        }
+        bababui.interrupt();
 //        do {
 //            posMove= miniMax(depth, Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState);
 //            System.out.println("depth= " +  depth);
@@ -40,11 +53,13 @@ public class Logic implements IGameHandler {
 //            Evaluate.eval = 0;
 //
 //        } while( System.currentTimeMillis() - startTime <600);
-        posMove= miniMax(4, Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState);
+        //posMove.set(miniMax(10, Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState));
 
-        Move move = posMove.getGameState().getLastMove();
-        log.info("Sende {} nach {}ms. evals are {} rating is " + posMove.getRating(), move, System.currentTimeMillis() - startTime, Evaluate.eval);
+        log.info(depth + " Tiefe");
+        Move move = posMove.get().getGameState().getLastMove();
+        log.info("Sende {} nach {}ms. evals are {} rating is " + posMove.get().getRating(), move, System.currentTimeMillis() - startTime, Evaluate.eval);
 //        System.out.println(Evaluate.eval);
+
         return move;
     }
 

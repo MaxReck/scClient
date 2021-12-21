@@ -4,7 +4,6 @@ import sc.api.plugins.ITeam;
 import sc.plugin2022.Coordinates;
 import sc.plugin2022.GameState;
 import sc.plugin2022.Piece;
-import sc.plugin2022.PieceType;
 
 import java.util.Objects;
 import java.util.Set;
@@ -44,26 +43,25 @@ public  class Evaluate {
             if(piece.getTeam() != playerTeam) {
                 continue;
             }
-            if(piece.getType() == PieceType.Herzmuschel) {
-                rating += 1;
-            }
-            if(piece.getType() == PieceType.Moewe) {
-                rating += 0.9;
-            }
-            if(piece.getType() == PieceType.Seestern) {
-                rating += 1.4;
-            }
-            if(piece.getType() == PieceType.Robbe) {
-                rating += 2.0f;
+            switch (piece.getType()) {
+                case Herzmuschel:
+                    rating += 1;
+                    break;
+                case Moewe:
+                        rating += 0.9;
+                        break;
+                case Seestern:
+                    rating += 1.4;
+                    break;
+                case Robbe:
+                    rating += 2.0;
+                    break;
             }
             if(piece.isAmber()) {
-                rating += 6.0f;
+                rating += 16.0f; // vorher einmal 6 und einmal 10
             }
             if(piece.getCount() >1) {
                 rating += piece.getCount()*4.0f;
-            }
-            if(piece.isAmber()) {
-                rating += 10;
             }
         }
         return rating;
