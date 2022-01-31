@@ -31,7 +31,7 @@ public class Logic implements IGameHandler {
     public Move calculateMove() {
         long startTime = System.currentTimeMillis();
         log.info("Es wurde ein Zug von {} angefordert.", gameState.getCurrentTeam());
-        Evaluate.setPlayerTeam(this.gameState.getCurrentTeam());
+        NewEvaluate.setPlayerTeam(gameState.getCurrentTeam());
         AtomicInteger depth = new AtomicInteger(1);
         AtomicReference<PosMove> posMove = new AtomicReference<>();
         Thread bababui = new Thread(() -> {
@@ -43,7 +43,7 @@ public class Logic implements IGameHandler {
         bababui.start();
         while (System.currentTimeMillis() - startTime < 1900) {
         }
-        bababui.interrupt();
+        bababui.stop();
 //        do {
 //            posMove= miniMax(depth, Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState);
 //            System.out.println("depth= " +  depth);
@@ -94,9 +94,10 @@ public class Logic implements IGameHandler {
 
 
 
+
     public PosMove miniMax( int depth, float alpha, float beta, boolean Maximum, GameState gameState)  {
         if(depth <= 0) {
-            return new PosMove(gameState, Evaluate.rateGameState(gameState));
+            return new PosMove(gameState,NewEvaluate.evaluatePosition(gameState));
         }
         if(Maximum) {
             PosMove maxMove = new PosMove(null, Float.MIN_VALUE);

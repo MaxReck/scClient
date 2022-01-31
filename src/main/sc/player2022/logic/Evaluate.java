@@ -48,8 +48,8 @@ public  class Evaluate {
                     rating += 1;
                     break;
                 case Moewe:
-                        rating += 0.9;
-                        break;
+                    rating += 0.9;
+                    break;
                 case Seestern:
                     rating += 1.4;
                     break;
