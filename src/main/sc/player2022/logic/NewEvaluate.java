@@ -9,11 +9,31 @@ import java.util.*;
 
 public class NewEvaluate {
 
+    private static final double[][] ratingNormal = {
+            {3, 1.8, 1.25, 1, 0.75, 0, 0},
+            {3, 2, 3, 1.75, 1.5, 1, 0, 0 },
+            {3, 2, 3, 1.75, 1.5, 1, 0, 0 },
+            {3, 2, 3, 1.75, 1.5, 1, 0, 0 },
+            {3, 2, 3, 1.75, 1.5, 1, 0, 0 },
+            {3, 2, 3, 1.75, 1.5, 1, 0, 0 },
+            {3, 1.8, 1.25, 1, 0.75, 0, 0}};
+
+    private static final double[][] ratingRobbe = {
+            {0, 0, 0, 0, 0, 0 ,0},
+            {0, 1, 1, 1, 1, 0.25, 0},
+            {0, 1, 2, 2, 2, 0.5, 0},
+            {0, 1, 2, 2, 2, 0.5, 0},
+            {0, 1, 2, 2, 2, 0.5, 0},
+            {0, 1, 1, 1, 1, 0.25, 0},
+            {0, 0, 0, 0, 0, 0 ,0}};
+
     /*
     ziel ist es 2 bernsteine zu bekommen.
     so weiter eien figut ist desto besser ist es
     bernsteine sind am wichtigsten
      */
+
+    // To do player does not know that if he gets an point to stack to 3 aka get a point the piece can't be attacked anymore. cousese some realy strange choice of play, important fix!
     private static ITeam playerTeam;
 
     public static void setPlayerTeam(ITeam playerTeam) {
@@ -27,6 +47,8 @@ public class NewEvaluate {
             if(gameState.getPointsForTeam(playerTeam) >= 2) {
                 System.out.println("winning game state");
                 rating += 100;
+            } else if(gameState.getTurn() == 60){
+                System.out.println("neutral");
             } else {
                 System.out.println("loosing gameState");
                 return Float.MIN_VALUE;
@@ -38,16 +60,59 @@ public class NewEvaluate {
 
         rating += pointsForDistanceFromStart(gameState);
 
-        rating += (gameState.getPointsForTeam(playerTeam) * 20 - gameState.getPointsForTeam(playerTeam.opponent()) * 20);
+//        rating += pieceEndOfBoard(gameState);
+
 
         return rating;
     }
 
+    private static float pieceEndOfBoard(GameState gameState) {
+        float rating = 0.0f;
+        //get all pieces on the board
+        Board board = gameState.getBoard();
+        List<PieceAndCords> friendly = new ArrayList<>();
+        List<PieceAndCords> enemy = new ArrayList<>();
+        for(Coordinates cords: board.keySet()) {
+            Piece piece = board.get(cords);
+            if(piece.getType() == PieceType.Robbe) {
+                continue;
+            }
+            if(piece.getTeam() == playerTeam) {
+                friendly.add(new PieceAndCords(piece, cords));
+            } else {
+                enemy.add(new PieceAndCords(piece, cords));
+            }
+        }
+        for(PieceAndCords piece: friendly) {
+            if(playerTeam == gameState.getStartTeam()) {
+                if(piece.getCords().getX() >=5) {
+                    rating += (float) Math.pow(1.3, piece.getCords().getX());
+                }
+            } else {
+                if(piece.getCords().getX() <=2) {
+                    rating += (float) 6.274 - piece.getCords().getX();
+                }
+            }
+        }
+        for(PieceAndCords piece: enemy) {
+            if(playerTeam == gameState.getStartTeam()) {
+                if(piece.getCords().getX() >=6) {
+                    rating += Math.pow(2, piece.getCords().getX());
+                }
+            } else {
+                if(piece.getCords().getX() <=3) {
+                    rating += 7 - piece.getCords().getX();
+                }
+            }
+        }
+        return rating;
+    };
 
-    public static float checkIfAPieceCanAttack(GameState gameState) {
+
+    private static float checkIfAPieceCanAttack(GameState gameState) {
         float rating = 0;
         Board board = gameState.getBoard();
-        Set<Coordinates> allPieces = board.keySet();
+        List<Coordinates> allPieces = getAllPieces(gameState);
 
         //split the 2 teams Pieces in to 2 list;
         List<PieceAndCords> friendlyPieces = new LinkedList<>();
@@ -78,10 +143,10 @@ public class NewEvaluate {
     }
 
 
-    public static float checkIfPieceCanGetAttacked(GameState gameState) {
+    private static float checkIfPieceCanGetAttacked(GameState gameState) {
         float rating = 0;
         Board board = gameState.getBoard();
-        Set<Coordinates> allPieces = board.keySet();
+        List<Coordinates> allPieces = getAllPieces(gameState);
         //split the 2 teams Pieces in to 2 list;
         List<PieceAndCords> enemyPieces = new LinkedList<>();
         List<Coordinates> friendlyPieces = new LinkedList<>();
@@ -112,48 +177,57 @@ public class NewEvaluate {
     }
 
 
-    public static float pointsForDistanceFromStart(GameState gameState) {
+    private static float pointsForDistanceFromStart(GameState gameState) {
         float rating = 0.0f;
-        Set<Coordinates> keySet = gameState.getBoard().getKeys();
-        for (Coordinates cords : keySet) {
+        List<Coordinates> allCords = getAllPieces(gameState);
+        for (Coordinates cords : allCords) {
             Piece piece = Objects.requireNonNull(gameState.getBoard().get(cords));
-            if (piece.getTeam() == playerTeam) {
-                if (gameState.getStartTeam() == playerTeam) {
-                    rating += cords.getX() * (piece.getType() != PieceType.Robbe ? 0.5 : 0.2);
-                } else {
-                    rating += (cords.getX() - 7) * (-1) * (piece.getType() != PieceType.Robbe ? 0.5 : 0.2);
-                }
-            }
             if (piece.getTeam() != playerTeam) {
                 continue;
             }
-            switch (piece.getType()) {
-                case Herzmuschel:
-                    rating += 1;
-                    break;
-                case Moewe:
-                    rating += 1;
-                    break;
-                case Seestern:
-                    rating += 1;
-                    break;
-                case Robbe:
-                    rating += 2.0;
-                    break;
-            }
+                if (gameState.getStartTeam() == playerTeam) {
+                    rating += piece.getType() == PieceType.Robbe ? ratingRobbe[cords.getY()][7-cords.getX()] : ratingNormal[cords.getY()][cords.getX()];
+                } else {
+                    rating += piece.getType() == PieceType.Robbe ? ratingRobbe[cords.getY()][cords.getX()] : ratingNormal[cords.getY()][cords.getX()];
+                }
+            rating += 10;
+//            switch (piece.getType()) {
+//                case Herzmuschel:
+//                    rating += 2;
+//                    break;
+//                case Moewe:
+//                    rating += 2;
+//                    break;
+//                case Seestern:
+//                    rating += 2;
+//                    break;
+//                case Robbe:
+//                    rating += 3.0;
+//                    break;
+//            }
             if (piece.isAmber()) {
                 rating += 16.0f; // vorher einmal 6 und einmal 10
             }
             if (piece.getCount() > 1) {
-                rating += piece.getCount() * 4.0f;
+                rating += piece.getCount() * 7.0f;
             }
         }
         return rating;
     }
 
 
-//    private static float checkIfAnPieceCanGetPointWithReachingTheOtherSide(GameState gameState) {
-//        Set<Coordinates> keySet = gameState.getBoard().getKeys();
-//
-//    }
+
+    private static List<Coordinates>  getAllPieces(GameState gameState) {
+        List<Coordinates> allPieces = new ArrayList<>();
+        Board board = gameState.getBoard();
+        Set<Coordinates> allCords = board.keySet();
+        for(Coordinates cords : allCords) {
+            Piece piece = board.get(cords);
+            if(piece.getCount() >= 3) {
+                continue;
+            }
+            allPieces.add(cords);
+        }
+        return allPieces;
+    }
 }
