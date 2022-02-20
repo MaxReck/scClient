@@ -26,4 +26,5 @@ public class PosMove {
     public void setGameState(GameState gameState) {
         this.gameState = gameState;
     }
+
 }

@@ -37,11 +37,14 @@ public class Logic implements IGameHandler {
         Thread bababui = new Thread(() -> {
             while (true) {
                 posMove.set(miniMax(depth.get(), Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState));
-                depth.getAndIncrement();
+                depth.getAndAdd(2);
+                if(posMove.get().getGameState() ==  null) {
+                    System.out.println(posMove.get() + "om depth= " + depth.get());
+                }
             }
         });
         bababui.start();
-        while (System.currentTimeMillis() - startTime < 1900) {
+        while (System.currentTimeMillis() - startTime < 1850) {
         }
         bababui.stop();
 //        do {
@@ -58,8 +61,9 @@ public class Logic implements IGameHandler {
         log.info(depth + " Tiefe");
         // Fix für den Null Fehler sehr schlecht
         if (posMove.get().getGameState() == null) {
-            GameState emergencyGameState = getGameStates(this.gameState).get(0);
-            posMove.get().setGameState(emergencyGameState);
+
+            posMove.set(new PosMove(getGameStates(gameState).get(0), 0.0f));
+            System.out.println("bad gamestate");
         }
         Move move = posMove.get().getGameState().getLastMove();
         log.info("Sende {} nach {}ms. evals are {} rating is " + posMove.get().getRating(), move, System.currentTimeMillis() - startTime, Evaluate.eval);
@@ -92,9 +96,6 @@ public class Logic implements IGameHandler {
         return nextLvlGameStates;
     }
 
-
-
-
     public PosMove miniMax( int depth, float alpha, float beta, boolean Maximum, GameState gameState)  {
         if(depth <= 0) {
             return new PosMove(gameState,(float) NewNewEvaluate.evaluateGameState(gameState));
@@ -104,6 +105,9 @@ public class Logic implements IGameHandler {
             for(GameState move: getGameStates(gameState)) {
                 PosMove posMove = miniMax(depth-1, alpha, beta, false, move);
                 if(posMove.getRating() > maxMove.getRating()) {
+                    if(move == null) {
+                        System.out.println("null here ");
+                    }
                     maxMove.setRating(posMove.getRating());
                     maxMove.setGameState(move);
 //                    log.info("new best max move rating: {} move: {} depth is " + depth, maxMove.getRating(), maxMove.getGameState().getLastMove());
@@ -113,14 +117,19 @@ public class Logic implements IGameHandler {
                     break;
                 }
             }
+
             return maxMove;
         } else {
             PosMove minMove = new PosMove(null, Float.MAX_VALUE);
             for(GameState move : getGameStates(gameState)) {
+                if(move == null) {
+                    continue;
+                }
                 PosMove posMove = miniMax(depth-1, alpha, beta, true, move);
                 if(minMove.getRating() > posMove.getRating()) {
+
                     minMove.setRating(posMove.getRating());
-                    minMove.setGameState(posMove.getGameState());
+                    minMove.setGameState(move);
 //                    log.info("new best min move rating: {} move: {} depth is " + depth, minMove.getRating(), minMove.getGameState().getLastMove());
                 }
                 beta = Math.min(beta, posMove.getRating());
