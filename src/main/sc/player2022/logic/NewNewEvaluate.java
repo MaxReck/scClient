@@ -12,14 +12,14 @@ public class NewNewEvaluate {
     //points for the pieces at specific Coordinates format used = [y][x].
     //rating for all pieces except the Pieces "Robe".
     private static final double[][] ratingNormal = {
-            {15, 6, 1.25, 1.11, 1, 0.75, 0.5, 0},
-            {15, 6, 2, 1.75, 1.5, 1, 0.5, 0 },
-            {15, 6, 2, 1.75, 1.5, 1, 0.5, 0 },
-            {15, 6, 2, 1.75, 1.5, 1, 0.5, 0 },
-            {15, 6, 2, 1.75, 1.5, 1, 0.5, 0 },
-            {15, 6, 2, 1.75, 1.5, 1, 0.5, 0 },
-            {15, 6, 2, 1.75, 1.5, 1, 0.5, 0 },
-            {15, 6, 1.25, 1.11, 1, 0.75, 0, 0}};
+            {15, 8, 4, 1.75, 1.5, 0.75, 0.5, 0},
+            {15, 8, 5, 2, 1.5, 1, 0.5, 0 },
+            {15, 8, 5, 2, 1.5, 1, 0.5, 0 },
+            {15, 8, 5, 2, 1.5, 1, 0.5, 0 },
+            {15, 8, 5, 2, 1.5, 1, 0.5, 0 },
+            {15, 8, 5, 2, 1.5, 1, 0.5, 0 },
+            {15, 8, 5, 2, 1.5, 1, 0.5, 0 },
+            {15, 8, 4, 1.75, 1.5, 0.75, 0.5, 0}};
 
     //rating for the piece "Robe".
     private static final double[][] ratingHeavy = {
@@ -31,12 +31,10 @@ public class NewNewEvaluate {
             {0, 0, 1, 1, 1, 1, 0, 0},
             {0, 0, 0, 0, 0, 0, 0, 0},
             {0, 0, 0, 0, 0, 0, 0, 0}};
-
-    private static ITeam playerTeam;
-
     //tempVariables
     private static final List<PieceAndCords> allFriendlyPieces = new ArrayList<>();
     private static final List<PieceAndCords> allEnemyPieces = new ArrayList<>();
+    private static ITeam playerTeam;
     private static Board board;
 
     public static void setPlayerTeam(ITeam team) {
@@ -44,24 +42,29 @@ public class NewNewEvaluate {
     }
 
     public static double evaluateGameState(GameState gameState) {
-        double rating = (gameState.getPointsForTeam(playerTeam) - gameState.getPointsForTeam(playerTeam.opponent())) * 75;
+        double rating = (gameState.getPointsForTeam(playerTeam) - gameState.getPointsForTeam(playerTeam.opponent())) * 250;
+        System.out.println((gameState.getPointsForTeam(playerTeam) - gameState.getPointsForTeam(playerTeam.opponent())));
         if(gameState.isOver()) {
             if(gameState.getPointsForTeam(playerTeam) >= 2) {
                 //this is a gameState where playerTeam wins
-                rating += 250;
+                rating += 850;
             } else {
                 //this is a gameState where playerTeam loses so a bad gameState
                 // hence return the min most value.
-                return Double.MIN_VALUE;
+                return -9999999;
             }
         }
         setUpTempVariables(gameState);
 
-        rating += (potentialAttack(true) + potentialAttack(false))*2;
+        rating += (potentialAttack(true) + potentialAttack(false));
 
-        rating += 5*(distance(gameState, true) + distance(gameState, false));
+        rating += (distance(gameState, true) + distance(gameState, false)*2);
 
         rating += rateIndividualPieces()*10;
+
+        rating += getPointsForFat()*5;
+
+        rating += (ownPieceGet(true) + ownPieceGet(false));
 
         //reset all temp variables
         board = null;
@@ -89,12 +92,6 @@ public class NewNewEvaluate {
                     rating -= 2.0;
                     break;
             }
-//            if(friendly.getPiece().isAmber()) {
-//                rating -= 16.0f;
-//            }
-            if(friendly.getPiece().getCount() >1) {
-                rating -= friendly.getPiece().getCount()*6.0f;
-            }
         }
 
         //Friendly Team
@@ -112,12 +109,6 @@ public class NewNewEvaluate {
                 case Robbe:
                     rating += 2.0;
                     break;
-            }
-//            if(friendly.getPiece().isAmber()) {
-//                rating += 16.0f;
-//            }
-            if(friendly.getPiece().getCount() >1) {
-                rating += friendly.getPiece().getCount()*6.0f;
             }
         }
 
@@ -161,6 +152,25 @@ public class NewNewEvaluate {
         return rating;
     }
 
+    //give points if own piece can attack own piece
+    private static double ownPieceGet(boolean ratedTeam) {
+        double rating = 0.0d;
+        for(PieceAndCords friendly: ratedTeam ? allFriendlyPieces : allEnemyPieces) {
+            List<Vector> possibleMoves = friendly.getPiece().getPossibleMoves();
+            for(Vector vector: possibleMoves) {
+                Coordinates possibleCoordinate = friendly.getCords().plus(vector);
+                for(PieceAndCords enemy:  ratedTeam ? allFriendlyPieces : allEnemyPieces) {
+                    //check if the new Coordinate matches any of the known enemy locations
+                    if(enemy.getCords().equals(possibleCoordinate)) {
+                        //if enemy has more than one Piece stacked reward more Points
+                        rating += enemy.getPiece().getCount() > 1 ? 4 : 1.5 * (ratedTeam ? 1 : -1);
+                    }
+                }
+            }
+        }
+        return rating;
+    }
+
     // rate the pieces on the board based on distance from start.
     // if ratedTeam true the function looks at friendlyPieces if false the other team.
     private static double distance(GameState gameState, boolean ratedTeam) {
@@ -170,18 +180,18 @@ public class NewNewEvaluate {
             //Rating FriendlyTeam
             if (playerTeam == gameState.getStartTeam()) {
                 for (PieceAndCords cords : allFriendlyPieces) {
-                            if(cords.getPiece().getType() == PieceType.Robbe) {
-                                rating += ratingHeavy[cords.getCords().getY()][7 - cords.getCords().getX()]*0.3;
-                            } else {
-                                rating += ratingNormal[cords.getCords().getY()][7 - cords.getCords().getX()];
-                            }
-                }
-            } else {
-                for (PieceAndCords cords : allFriendlyPieces) {
                     if(cords.getPiece().getType() == PieceType.Robbe) {
                         rating += ratingHeavy[cords.getCords().getY()][7 - cords.getCords().getX()]*0.3;
                     } else {
                         rating += ratingNormal[cords.getCords().getY()][7 - cords.getCords().getX()];
+                    }
+                }
+            } else {
+                for (PieceAndCords cords : allFriendlyPieces) {
+                    if(cords.getPiece().getType() == PieceType.Robbe) {
+                        rating += ratingHeavy[cords.getCords().getY()][cords.getCords().getX()]*0.3;
+                    } else {
+                        rating += ratingNormal[cords.getCords().getY()][ cords.getCords().getX()];
                     }
                 }
             }
@@ -198,14 +208,25 @@ public class NewNewEvaluate {
             } else {
                 for (PieceAndCords cords : allEnemyPieces) {
                     if (cords.getPiece().getType() == PieceType.Robbe) {
-                        rating += ratingHeavy[cords.getCords().getY()][cords.getCords().getX()] * 0.3;
+                        rating += ratingHeavy[cords.getCords().getY()][7- cords.getCords().getX()] * 0.3;
                     } else {
-                        rating += ratingNormal[cords.getCords().getY()][cords.getCords().getX()];
+                        rating += ratingNormal[cords.getCords().getY()][7- cords.getCords().getX()];
                     }
                 }
             }
         }
         return rating;
+    }
+
+    private static double getPointsForFat() {
+        double value =0.0d;
+        for(PieceAndCords piece: allFriendlyPieces) {
+            value += piece.getPiece().getCount()*4;
+        }
+        for(PieceAndCords piece: allEnemyPieces) {
+            value -= piece.getPiece().getCount()*4;
+        }
+        return value;
     }
 
     // setting up commonly used Variables/Lists

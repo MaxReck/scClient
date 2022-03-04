@@ -4,8 +4,8 @@ import sc.plugin2022.Coordinates;
 import sc.plugin2022.Piece;
 
 public class PieceAndCords {
-    private Piece piece;
-    private Coordinates cords;
+    private final Piece piece;
+    private final Coordinates cords;
 
     public PieceAndCords(Piece piece, Coordinates cords) {
         this.piece = piece;

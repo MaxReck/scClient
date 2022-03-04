@@ -36,7 +36,7 @@ public class Logic implements IGameHandler {
         AtomicReference<PosMove> posMove = new AtomicReference<>();
         Thread bababui = new Thread(() -> {
             while (true) {
-                posMove.set(miniMax(depth.get(), Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState));
+                posMove.set(miniMax(depth.get(), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true, this.gameState));
                 depth.getAndAdd(2);
                 if(posMove.get().getGameState() ==  null) {
                     System.out.println(posMove.get() + "om depth= " + depth.get());
@@ -47,26 +47,9 @@ public class Logic implements IGameHandler {
         while (System.currentTimeMillis() - startTime < 1850) {
         }
         bababui.stop();
-//        do {
-//            posMove= miniMax(depth, Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState);
-//            System.out.println("depth= " +  depth);
-//            System.out.println("eval= " + Evaluate.eval);
-//            System.out.println("time= " + (System.currentTimeMillis() - startTime));
-//            depth++;
-//            Evaluate.eval = 0;
-//
-//        } while( System.currentTimeMillis() - startTime <600);
-        //posMove.set(miniMax(10, Float.MIN_VALUE, Float.MAX_VALUE, true, this.gameState));
-
         log.info(depth + " Tiefe");
-        // Fix für den Null Fehler sehr schlecht
-        if (posMove.get().getGameState() == null) {
-
-            posMove.set(new PosMove(getGameStates(gameState).get(0), 0.0f));
-            System.out.println("bad gamestate");
-        }
         Move move = posMove.get().getGameState().getLastMove();
-        log.info("Sende {} nach {}ms. evals are {} rating is " + posMove.get().getRating(), move, System.currentTimeMillis() - startTime, Evaluate.eval);
+        log.info("Sende {} nach {}ms. evals are" + posMove.get().getRating(), move, System.currentTimeMillis() - startTime);
 //        System.out.println(Evaluate.eval);
 
         return move;
@@ -92,45 +75,37 @@ public class Logic implements IGameHandler {
             temp.performMove(move); // perform move to create a different game state
             nextLvlGameStates.add(temp);
         }
-//        System.out.println("first move is " + nextLvlGameStates.get(0).getLastMove());
         return nextLvlGameStates;
     }
 
-    public PosMove miniMax( int depth, float alpha, float beta, boolean Maximum, GameState gameState)  {
+    public PosMove miniMax( int depth, double alpha, double beta, boolean Maximum, GameState gameState)  {
         if(depth <= 0) {
-            return new PosMove(gameState,(float) NewNewEvaluate.evaluateGameState(gameState));
+            return new PosMove(gameState,NewNewEvaluate.evaluateGameState(gameState));
         }
         if(Maximum) {
-            PosMove maxMove = new PosMove(null, Float.MIN_VALUE);
+            PosMove maxMove = new PosMove(null, Double.NEGATIVE_INFINITY );
             for(GameState move: getGameStates(gameState)) {
                 PosMove posMove = miniMax(depth-1, alpha, beta, false, move);
                 if(posMove.getRating() > maxMove.getRating()) {
-                    if(move == null) {
-                        System.out.println("null here ");
-                    }
                     maxMove.setRating(posMove.getRating());
                     maxMove.setGameState(move);
-//                    log.info("new best max move rating: {} move: {} depth is " + depth, maxMove.getRating(), maxMove.getGameState().getLastMove());
                 }
                 alpha = Math.max(alpha, posMove.getRating());
                 if(beta <= alpha) {
                     break;
                 }
             }
-
             return maxMove;
         } else {
-            PosMove minMove = new PosMove(null, Float.MAX_VALUE);
+            PosMove minMove = new PosMove(null, Double.POSITIVE_INFINITY);
             for(GameState move : getGameStates(gameState)) {
                 if(move == null) {
                     continue;
                 }
                 PosMove posMove = miniMax(depth-1, alpha, beta, true, move);
                 if(minMove.getRating() > posMove.getRating()) {
-
                     minMove.setRating(posMove.getRating());
                     minMove.setGameState(move);
-//                    log.info("new best min move rating: {} move: {} depth is " + depth, minMove.getRating(), minMove.getGameState().getLastMove());
                 }
                 beta = Math.min(beta, posMove.getRating());
                 if(beta <= alpha) {

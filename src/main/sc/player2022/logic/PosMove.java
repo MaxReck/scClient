@@ -4,9 +4,9 @@ import sc.plugin2022.GameState;
 
 public class PosMove {
     private GameState gameState;
-    private Float rating;
+    private double rating;
 
-    public PosMove(GameState gameState, Float rating) {
+    public PosMove(GameState gameState, double rating) {
         this.gameState = gameState;
         this.rating = rating;
     }
@@ -15,11 +15,11 @@ public class PosMove {
         return gameState;
     }
 
-    public Float getRating() {
+    public double getRating() {
         return rating;
     }
 
-    public void setRating(Float rating) {
+    public void setRating(double rating) {
         this.rating = rating;
     }
 
