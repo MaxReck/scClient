@@ -43,7 +43,6 @@ public class NewNewEvaluate {
 
     public static double evaluateGameState(GameState gameState) {
         double rating = (gameState.getPointsForTeam(playerTeam) - gameState.getPointsForTeam(playerTeam.opponent())) * 250;
-        System.out.println((gameState.getPointsForTeam(playerTeam) - gameState.getPointsForTeam(playerTeam.opponent())));
         if(gameState.isOver()) {
             if(gameState.getPointsForTeam(playerTeam) >= 2) {
                 //this is a gameState where playerTeam wins
@@ -58,7 +57,7 @@ public class NewNewEvaluate {
 
         rating += (potentialAttack(true) + potentialAttack(false));
 
-        rating += (distance(gameState, true) + distance(gameState, false)*2);
+        rating += (distance(gameState, true) + distance(gameState, false)*3);
 
         rating += rateIndividualPieces()*10;
 

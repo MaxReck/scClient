@@ -39,7 +39,7 @@ public class Logic implements IGameHandler {
                 posMove.set(miniMax(depth.get(), Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, true, this.gameState));
                 depth.getAndAdd(2);
                 if(posMove.get().getGameState() ==  null) {
-                    System.out.println(posMove.get() + "om depth= " + depth.get());
+                    System.out.println(posMove.get() + " on depth= " + depth.get());
                 }
             }
         });
